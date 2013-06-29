@@ -1,30 +1,42 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import sys
+import collections
 
-def optimizer(items, capacity, values, weights):
-    # maximize the item value without going over capacity
+def knapsack(itemNum, capacity, values, weights):
+    matrix = collections.defaultdict(dict)
+    keeper = collections.defaultdict(dict)
     sumValue = 0
     sumWeight = 0
     taken = {}
 
-    valueMap = {values[i] : (weights[i], i) for i in range(items)}
-    sortedValues = sorted(valueMap, reverse=True)
+    for w in range(capacity+1):
+        matrix[0][w] = 0
 
-    for value in sortedValues:
-        (weight, idx) = valueMap[value]
+    for i in range(1, itemNum+1):
+        for j in range(1, capacity+1):
 
-        if weight + sumWeight > capacity:
-            continue
+            leave = matrix[i-1].get(j, 0)
+            keep = matrix[i-1].get(j-weights[i-1], 0) + values[i-1]
 
-        sumWeight += weight
-        sumValue += value
-        taken[idx] = True
+            if weights[i-1] <= j and keep > leave:
+                keeper[i][j] = True
+                matrix[i][j] = keep
+            else:
+                matrix[i][j] = leave
+                keeper[i][j] = False
 
-        #print sumWeight, sumValue, taken
+    maxWeight = capacity
+    for i in reversed(range(1, itemNum+1)):
+        if keeper[i].get(maxWeight, False) == True:
+            taken[i-1] = True
+            sumValue += values[i-1]
+            sumWeight += weights[i-1]
+            maxWeight -= weights[i-1]
+        else:
+            taken[i-1] = False
 
     return (sumValue, sumWeight, taken)
-
 
 def solveIt(inputData):
     # Modify this code to run your optimization algorithm
@@ -49,7 +61,7 @@ def solveIt(inputData):
     items = len(values)
 
     # the optimizer
-    (value, weight, taken) = optimizer(items, capacity, values, weights)
+    (value, weight, taken) = knapsack(items, capacity, values, weights)
 
     # prepare the solution in the specified output format
     outputData = str(value) + ' ' + str(0) + '\n'
